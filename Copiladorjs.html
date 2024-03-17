@@ -12,7 +12,7 @@
   <meta property="og:url" content="javascriptonline.onrender.com">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
       display: flex;
@@ -20,27 +20,27 @@
       align-items: center;
       height: 100vh;
       background-color: #f4f4f4;
+      color: #111;
+      transition: background-color 0.3s, color 0.3s;
     }
     #container {
       width: 80%;
-      max-width: 800px;
+      /* max-width: 800px; */
       padding: 20px;
       border-radius: 8px;
       background-color: #fff;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s;
     }
     textarea {
-      width: 100%;
-      height: 200px;
+      width: 97%;
+      height: 350px;
       margin-bottom: 10px;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
       resize: vertical;
-      /* Desabilita a verificação ortográfica e gramatical */
       spellcheck: false;
-	  color:#111;
-	  font-size:16px;
     }
     button {
       padding: 10px 20px;
@@ -53,23 +53,35 @@
     button:hover {
       background-color: #0056b3;
     }
-    .hljs-comment {
-      color: #6a9955; /* cor para comentários */
+    #resultado {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      overflow: auto;
+      background-color: #f9f9f9;
+      color: #333;
     }
-    .hljs-string {
-      color: #df5000; /* cor para strings */
+    .dark-mode {
+      background-color: #1e1e1e !important;
+      color: #d4d4d4 !important;
     }
-    .hljs-number, .hljs-literal, .hljs-symbol, .hljs-selector-attr, .hljs-selector-pseudo {
-      color: #905; /* cor para números e literais */
+    .dark-mode #container {
+      background-color: #252526 !important;
     }
-    .hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-builtin-name, .hljs-name, .hljs-tag {
-      color: #0086b3; /* cor para palavras-chave e tags */
+    .dark-mode h1 {
+      color: #61dafb !important;
     }
-    .hljs-function {
-      color: #ff0080; /* cor para funções */
+    .dark-mode textarea {
+      background-color: #1e1e1e !important;
+      color: #d4d4d4 !important;
     }
-    .hljs-title, .hljs-attr, .hljs-variable, .hljs-template-variable, .hljs-type, .hljs-built_in, .hljs-class .hljs-class .hljs-title {
-      color: #90a; /* cor para variáveis e títulos */
+    .dark-mode button {
+      background-color: #1e1e1e !important;
+      color: #d4d4d4 !important;
+    }
+    .dark-mode #resultado {
+      background-color: #1e1e1e !important;
     }
   </style>
 </head>
@@ -78,48 +90,69 @@
 <div id="container">
   <h1>Executar Código JavaScript</h1>
   <p>Escreva seu código JavaScript abaixo e clique no botão "Executar" para ver o resultado:</p>
+  <div style="text-align: center; margin-top: 20px;">
+    <button onclick="toggleTheme()">Alterar Tema</button>
+  </div> <br>
   <textarea id="code" placeholder="// Insira seu código aqui" spellcheck="false"></textarea>
   <button onclick="executarCodigo()">Executar</button>
   <div id="resultado"></div>
 </div>
 
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.9.1/highlight.min.js"></script>
 <script>hljs.highlightAll();</script>
 
 <script>
-  // Recupera os valores salvos no armazenamento local ao carregar a página
-  window.onload = function() {
-    var savedCode = localStorage.getItem('savedCode');
-    if (savedCode) {
-      document.getElementById('code').value = savedCode;
-    }
-    var savedResult = localStorage.getItem('savedResult');
-    if (savedResult) {
-      document.getElementById('resultado').innerHTML = savedResult;
-    }
-  };
+  function toggleTheme() {
+    const body = document.body;
+    const container = document.getElementById('container');
+    const textarea = document.getElementById('code');
+    const buttons = document.querySelectorAll('button');
+    const resultado = document.getElementById('resultado');
 
-  function executarCodigo() {
-    // Captura o código do textarea
+    body.classList.toggle('dark-mode');
+    container.classList.toggle('dark-mode');
+    textarea.classList.toggle('dark-mode');
+    buttons.forEach(btn => btn.classList.toggle('dark-mode'));
+    resultado.classList.toggle('dark-mode');
+  }
+
+
+    function executarCodigo() {
     var codigo = document.getElementById('code').value;
+    var consoleLog = console.log; // Salva a referência original para console.log
+    
+    // Redefine console.log para capturar a saída
+    var capturarSaida = [];
+    console.log = function() {
+      var mensagem = Array.prototype.slice.call(arguments).join(' ');
+      capturarSaida.push(mensagem);
+    };
     
     try {
       // Executa o código JavaScript usando eval()
       var resultado = eval(codigo);
-      // Verifica se o resultado é undefined
-      if (resultado === undefined) {
+      
+      // Verifica se há saída capturada
+      var saidaCapturada = capturarSaida.join('<br>');
+      
+      // Se houver saída capturada, exibe-a
+      if (saidaCapturada) {
+        document.getElementById('resultado').innerHTML = saidaCapturada;
+      } else if (resultado === undefined) {
         document.getElementById('resultado').innerHTML = "<pre>Nenhum resultado retornado</pre>";
       } else {
         // Mostra o resultado na div resultado
         document.getElementById('resultado').innerHTML = "<pre>" + resultado + "</pre>";
       }
-      // Salva o código e o resultado no armazenamento local
-      localStorage.setItem('savedCode', codigo);
-      localStorage.setItem('savedResult', document.getElementById('resultado').innerHTML);
     } catch (error) {
-      // Se houver um erro, mostra no console
-      console.error(error);
+      // Se houver um erro, mostra na div resultado
+      document.getElementById('resultado').innerHTML = "<pre class='error'>" + error + "</pre>";
     }
+    
+    // Restaura console.log para sua referência original
+    console.log = consoleLog;
   }
 </script>
 
